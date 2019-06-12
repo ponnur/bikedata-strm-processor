@@ -7,6 +7,11 @@ scalaVersion := "2.12.1"
 
 val sparkVersion = "2.4.0"
 
+assemblyMergeStrategy in assembly := {
+  case PathList("reference.conf")     => MergeStrategy.concat
+  case PathList("META-INF", xs @ _ *) => MergeStrategy.discard
+}
+
 assemblyJarName in assembly := "bikedata-strm-processor.jar"
 
 libraryDependencies ++= Seq(
@@ -17,9 +22,11 @@ libraryDependencies ++= Seq(
   "org.apache.spark"                %% "spark-core"                   % sparkVersion,
   "org.apache.spark"                %% "spark-sql"                    % sparkVersion,
   "org.apache.spark"                %% "spark-streaming-kafka-0-10"   % "2.4.3",
-  "org.apache.spark"                %% "spark-sql-kafka-0-10" %       "2.4.3"
+  "org.apache.spark"                %% "spark-sql-kafka-0-10"         % "2.4.3",
+  "com.typesafe"                    % "config"                        % "1.2.0"
 )
 
 
+//Test dependencies
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.0-SNAP5" % Test
 libraryDependencies += "org.mockito" % "mockito-all" % "1.10.19" % Test

@@ -1,28 +1,49 @@
 package com.citybike.data.processor
 
+import org.apache.spark.SparkConf
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession, Row}
 import org.scalatest.{FunSpec, Matchers}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.functions.round
 
 
 class BikeDataProcessorSpec extends FunSpec {
+
+
   implicit lazy val sparkSession: SparkSession = {
-    SparkSession.builder().master("local").appName("WhatifanalysisUnitTest").getOrCreate()
+    SparkSession.builder().master("local").appName("WhatifanalysisUnitTest")
+      .getOrCreate()
   }
   sparkSession.sparkContext.setLogLevel("ERROR")
+
   import sparkSession.implicits._
 
 
+  describe("city bike data processing") {
 
-  describe("local path") {
-
-    it("should calculate the running average of the bikes available"){
+    it("should calculate the running average of the bikes available") {
 
       val avgBikeCountDF = Seq(
         ("station_1", 10.4, 10),
-        ("station_2", 20.25, 4))
+        ("station_2", 20.25, 4),
+        ("station_3", 45.00, 3))
         .toDF("station_id", "avg_num_bikes_available", "num_records_for_avg")
 
+      val bikesAvailableDF = Seq(
+        ("station_1", 100L),
+        ("station_2", 150L),
+        ("station_4", 10L))
+        .toDF("station_id", "num_bikes_available")
+
+      bikesAvailableDF.join(avgBikeCountDF, List("station_id"), "left_outer").show(400)
+      bikesAvailableDF.join(avgBikeCountDF, List("station_id"), "right_outer").show(400)
+
+
+
+      val fullOuterDF: DataFrame = bikesAvailableDF.join(avgBikeCountDF, List("station_id"), "full_outer")
+      fullOuterDF.printSchema()
+
+      fullOuterDF.show(400)
 
     }
 
@@ -35,7 +56,7 @@ class BikeDataProcessorSpec extends FunSpec {
 
       bikeCountDF.show()
 
-      val path = "/Users/ponnulingam/ns/city_bike/bikedata-strm-processor/bike_data_checkpoint"
+      val path = "/tmp/bike_data_checkpoint"
 
 
       bikeCountDF.coalesce(1)
@@ -51,7 +72,7 @@ class BikeDataProcessorSpec extends FunSpec {
         .toDF("station_id", "total_count", "no_readings")
 
 
-      val sourceDF = sparkSession.read.option("header","true").csv(path)
+      val sourceDF = sparkSession.read.option("header", "true").csv(path)
 
       sourceDF.cache()
 
@@ -69,12 +90,9 @@ class BikeDataProcessorSpec extends FunSpec {
         .option("header", "true").format("csv")
         .save(path)
 
-
-      sparkSession.read.option("header","true").csv(path).show()
+      sparkSession.read.option("header", "true").csv(path).show()
 
     }
-
-
   }
 
 
