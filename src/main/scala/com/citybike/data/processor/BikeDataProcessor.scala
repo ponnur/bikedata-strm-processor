@@ -134,7 +134,7 @@ object BikeDataProcessor extends Serializable {
 
       //Calculate the average bikes available metrics
       val bikesAvailableDF = df.select(col(STATION_ID), col(NO_BIKES_AVAILABLE)).groupBy(STATION_ID)
-        .agg(sum(col(NO_BIKES_AVAILABLE)).alias(NO_BIKES_AVAILABLE))
+        .agg(avg(col(NO_BIKES_AVAILABLE)).alias(NO_BIKES_AVAILABLE))
 
       val bikeAvailabeWithAgvDF = calculateAvgNoOfBikesAvailable(bikesAvailableDF)
       bikeAvailabeWithAgvDF.show(10)
@@ -157,9 +157,13 @@ object BikeDataProcessor extends Serializable {
         val dfWithPrevAvg = df.join(previousAvgBikeCountDF, List(STATION_ID), "full_outer")
 
         dfWithPrevAvg
-          .withColumn(UPDATED_AVG_NO_BIKES_AVAIL, when(col(NO_BIKES_AVAILABLE).isNull, col(AVG_NO_OF_BIKS_AVAILABLE)).when(col(AVG_NO_OF_BIKS_AVAILABLE).isNull, col(NO_BIKES_AVAILABLE))
+          .withColumn(UPDATED_AVG_NO_BIKES_AVAIL,
+                when(col(NO_BIKES_AVAILABLE).isNull, col(AVG_NO_OF_BIKS_AVAILABLE)).when(col(AVG_NO_OF_BIKS_AVAILABLE).isNull, col(NO_BIKES_AVAILABLE))
             .otherwise(lit(col(AVG_NO_OF_BIKS_AVAILABLE)) + lit(lit(col(NO_BIKES_AVAILABLE) - col(AVG_NO_OF_BIKS_AVAILABLE)) / lit(col(NO_RECORDS_FOR_AVG)))))
-          .withColumn(UPDATED_NO_RECORDS_FOR_AVG, when(col(NO_BIKES_AVAILABLE).isNull, col(NO_RECORDS_FOR_AVG)).when(col(NO_RECORDS_FOR_AVG).isNull, lit(1L)).otherwise(col(NO_RECORDS_FOR_AVG) + 1L))
+
+          .withColumn(UPDATED_NO_RECORDS_FOR_AVG, when(col(NO_BIKES_AVAILABLE).isNull, col(NO_RECORDS_FOR_AVG)).when(col(NO_RECORDS_FOR_AVG).isNull, lit(1L))
+            .otherwise(col(NO_RECORDS_FOR_AVG) + 1L))
+
           .select(col(STATION_ID), col(UPDATED_AVG_NO_BIKES_AVAIL).as(AVG_NO_OF_BIKS_AVAILABLE), col(UPDATED_NO_RECORDS_FOR_AVG).as(NO_RECORDS_FOR_AVG))
 
       }

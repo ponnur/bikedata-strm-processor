@@ -7,11 +7,6 @@ scalaVersion := "2.12.1"
 
 val sparkVersion = "2.4.0"
 
-assemblyMergeStrategy in assembly := {
-  case PathList("reference.conf")     => MergeStrategy.concat
-  case PathList("META-INF", xs @ _ *) => MergeStrategy.discard
-}
-
 assemblyJarName in assembly := "bikedata-strm-processor.jar"
 
 libraryDependencies ++= Seq(
@@ -26,7 +21,12 @@ libraryDependencies ++= Seq(
   "com.typesafe"                    % "config"                        % "1.2.0"
 )
 
-
 //Test dependencies
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.0-SNAP5" % Test
 libraryDependencies += "org.mockito" % "mockito-all" % "1.10.19" % Test
+
+
+assemblyShadeRules in assembly := Seq(
+  ShadeRule.rename("com.google.common.**" -> "repackaged.com.google.common.@1").inAll
+)
+

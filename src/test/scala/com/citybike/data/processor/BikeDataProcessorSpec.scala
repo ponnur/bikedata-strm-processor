@@ -21,6 +21,23 @@ class BikeDataProcessorSpec extends FunSpec {
 
   describe("city bike data processing") {
 
+
+    it("should calcuate the average of the bikes available"){
+
+      val df = Seq(
+        ("station_1", 10 ),
+        ("station_2", 30),
+        ("station_1", 20))
+        .toDF("station_id", "num_bikes_available")
+
+      val bikesAvailableDF = df.select(col("station_id"), col("num_bikes_available")).groupBy("station_id")
+        .agg(avg(col("num_bikes_available")).alias("num_bikes_available"))
+
+      bikesAvailableDF.show()
+
+    }
+
+
     it("should calculate the running average of the bikes available") {
 
       val avgBikeCountDF = Seq(
@@ -34,6 +51,9 @@ class BikeDataProcessorSpec extends FunSpec {
         ("station_2", 150L),
         ("station_4", 10L))
         .toDF("station_id", "num_bikes_available")
+
+      20.25 + (20.25-150)/(4+1)
+
 
       bikesAvailableDF.join(avgBikeCountDF, List("station_id"), "left_outer").show(400)
       bikesAvailableDF.join(avgBikeCountDF, List("station_id"), "right_outer").show(400)
